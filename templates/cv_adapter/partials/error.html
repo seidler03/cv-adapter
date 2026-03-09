@@ -1,0 +1,18 @@
+<!-- HTMX partial: error fragment -->
+<div class="rounded-2xl border border-red-700/40 bg-red-900/20 p-6">
+  <h3 class="font-semibold text-red-300 mb-2">Something went wrong</h3>
+  {% if message %}
+  <p class="text-sm text-gray-300">{{ message }}</p>
+  {% endif %}
+  {% if errors %}
+  <ul class="mt-2 space-y-1">
+    {% for field, errs in errors.items %}
+    <li class="text-sm text-gray-300"><span class="text-red-400">{{ field }}:</span> {{ errs|join:", " }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% if error == 'limit_reached' %}
+  <p class="text-sm text-gray-300 mt-2">{{ message }}</p>
+  <a href="{% url 'payments:upgrade' %}" class="mt-4 inline-block bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition">Upgrade to Pro</a>
+  {% endif %}
+</div>

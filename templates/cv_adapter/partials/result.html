@@ -1,0 +1,114 @@
+<!-- HTMX partial: result fragment injected after AI processing -->
+<div class="space-y-5">
+
+  <!-- Score banner -->
+  <div class="flex items-center gap-4 rounded-2xl p-5
+    {% if application.score_match >= 70 %}bg-green-900/30 border border-green-700/40
+    {% elif application.score_match >= 40 %}bg-amber-900/30 border border-amber-700/40
+    {% else %}bg-red-900/30 border border-red-700/40{% endif %}">
+    <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full font-extrabold text-xl
+      {% if application.score_match >= 70 %}bg-green-500/20 text-green-300
+      {% elif application.score_match >= 40 %}bg-amber-500/20 text-amber-300
+      {% else %}bg-red-500/20 text-red-300{% endif %}">
+      {{ application.score_match }}
+    </div>
+    <div>
+      <p class="font-semibold text-white">Match Score</p>
+      <p class="text-xs text-gray-400">
+        {% if application.score_match >= 70 %}Strong match &mdash; ready to apply!
+        {% elif application.score_match >= 40 %}Average &mdash; follow the suggestions.
+        {% else %}Low match &mdash; significant rewriting recommended.{% endif %}
+      </p>
+    </div>
+    <a href="{% url 'cv_adapter:result' application.pk %}" class="ml-auto border border-gray-600 bg-gray-700 hover:bg-gray-600 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition shrink-0">
+      Full view &rarr;
+    </a>
+  </div>
+
+  <!-- Keywords -->
+  <div class="rounded-2xl border border-gray-700 bg-gray-800 p-5">
+    <h3 class="text-sm font-semibold text-gray-300 mb-3">Keywords</h3>
+    <div class="flex flex-wrap gap-2 mb-3">
+      {% for kw in application.keywords_found %}
+      <span class="bg-green-900 text-green-300 rounded-full px-2.5 py-0.5 text-xs">&check; {{ kw }}</span>
+      {% empty %}
+      <span class="text-xs text-gray-500">None found</span>
+      {% endfor %}
+    </div>
+    <div class="flex flex-wrap gap-2">
+      {% for kw in application.keywords_missing %}
+      <span class="bg-red-900 text-red-300 rounded-full px-2.5 py-0.5 text-xs">&cross; {{ kw }}</span>
+      {% empty %}
+      <span class="text-xs text-gray-500">None missing</span>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Suggestions -->
+  {% if application.suggestions %}
+  <div class="rounded-2xl border border-gray-700 bg-gray-800 p-5">
+    <h3 class="text-sm font-semibold text-gray-300 mb-3">Suggestions</h3>
+    <ul class="space-y-1.5">
+      {% for s in application.suggestions %}
+      <li class="flex gap-2 text-sm text-gray-300">
+        <span class="text-indigo-400 mt-0.5 shrink-0">&rarr;</span>{{ s }}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <!-- LinkedIn connection message -->
+  {% if application.linkedin_message %}
+  <div class="rounded-2xl border border-blue-700/40 bg-blue-900/20 p-5" x-data="{ copied: false }">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="text-sm font-semibold text-blue-300">&#x1F517; LinkedIn Message</h3>
+      <button @click="navigator.clipboard.writeText('{{ application.linkedin_message|escapejs }}'); copied=true; setTimeout(()=>copied=false, 2000)"
+              class="border border-blue-700/50 bg-blue-900/30 hover:bg-blue-800/40 text-blue-300 text-xs font-semibold px-3 py-1 rounded-xl transition">
+        <span x-text="copied ? 'Copied!' : 'Copy'">Copy</span>
+      </button>
+    </div>
+    <p class="text-sm text-gray-200 leading-relaxed">{{ application.linkedin_message }}</p>
+    <p class="mt-2 text-xs text-blue-400/70">{{ application.linkedin_message|length }}/300 characters</p>
+  </div>
+  {% endif %}
+
+  <!-- Adapted CV preview -->
+  <div class="rounded-2xl border border-gray-700 bg-gray-800 p-5" x-data="{open: false}">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="text-sm font-semibold text-gray-300">Adapted CV</h3>
+      <div class="flex gap-2">
+        <button @click="open=!open" class="text-xs text-indigo-400 hover:text-indigo-300">
+          <span x-text="open ? 'Collapse' : 'Expand'">Expand</span>
+        </button>
+        <a href="{% url 'cv_adapter:download_docx' application.pk %}" class="border border-gray-600 bg-gray-700 hover:bg-gray-600 text-white text-xs font-semibold px-3 py-1 rounded-xl transition">
+          &darr; DOCX
+        </a>
+      </div>
+    </div>
+    <div x-show="open" class="mt-2">
+      <pre class="whitespace-pre-wrap text-xs text-gray-300 leading-relaxed max-h-80 overflow-y-auto rounded-xl bg-gray-900 p-4">{{ application.cv_adapted }}</pre>
+    </div>
+    <button onclick="navigator.clipboard.writeText(`{{ application.cv_adapted|escapejs }}`)"
+            class="mt-3 w-full border border-gray-600 bg-gray-700 hover:bg-gray-600 text-white text-xs font-semibold py-2 rounded-xl transition">
+      Copy CV text
+    </button>
+  </div>
+
+  <!-- Cover letter preview -->
+  <div class="rounded-2xl border border-gray-700 bg-gray-800 p-5" x-data="{open: false}">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="text-sm font-semibold text-gray-300">Cover Letter</h3>
+      <button @click="open=!open" class="text-xs text-indigo-400 hover:text-indigo-300">
+        <span x-text="open ? 'Collapse' : 'Expand'">Expand</span>
+      </button>
+    </div>
+    <div x-show="open" class="mt-2">
+      <pre class="whitespace-pre-wrap text-xs text-gray-300 leading-relaxed max-h-80 overflow-y-auto rounded-xl bg-gray-900 p-4">{{ application.cover_letter }}</pre>
+    </div>
+    <button onclick="navigator.clipboard.writeText(`{{ application.cover_letter|escapejs }}`)"
+            class="mt-3 w-full border border-gray-600 bg-gray-700 hover:bg-gray-600 text-white text-xs font-semibold py-2 rounded-xl transition">
+      Copy cover letter
+    </button>
+  </div>
+</div>

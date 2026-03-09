@@ -1,0 +1,102 @@
+<!-- HTMX partial: slide-over detail panel -->
+<div class="p-6 h-full flex flex-col">
+  <!-- Header -->
+  <div class="flex items-start justify-between mb-6">
+    <div>
+      <h2 class="text-lg font-bold text-white">{{ app.job_title }}</h2>
+      <p class="text-sm text-gray-400 mt-0.5">{{ app.company }}</p>
+    </div>
+    <button onclick="document.getElementById('detail-panel').classList.add('translate-x-full')"
+            class="text-gray-400 hover:text-white text-xl leading-none">✕</button>
+  </div>
+
+  <!-- Status stepper (pipeline) -->
+  <div class="mb-6">
+    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Pipeline</p>
+    <div class="flex gap-1 flex-wrap">
+      {% for stage in pipeline_stages_data %}
+      <span class="px-2.5 py-0.5 rounded-full text-xs font-medium
+        {% if app.status == stage.value %}{{ stage.color }} ring-2 ring-white/30{% else %}bg-gray-700 text-gray-500{% endif %}">
+        {{ stage.label }}
+      </span>
+      {% endfor %}
+    </div>
+    {% if app.status in negative_stages %}
+    <div class="mt-2">
+      <span class="px-2.5 py-0.5 rounded-full text-xs font-medium {{ app.status_badge_class }}">
+        {{ app.get_status_display }}
+      </span>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Status update form -->
+  <form method="post" action="{% url 'job_tracker:update_status' app.pk %}"
+        hx-post="{% url 'job_tracker:update_status' app.pk %}"
+        hx-target="#badge-{{ app.pk }}"
+        hx-swap="outerHTML"
+        class="mb-6">
+    {% csrf_token %}
+    <div class="mb-4">
+      <label class="block text-xs font-medium text-gray-400 mb-1.5">Update Status</label>
+      <select name="status" class="w-full bg-gray-700 border border-gray-600 text-white rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        {% for val, label in status_form.fields.status.choices %}
+        <option value="{{ val }}" {% if app.status == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="mb-4">
+      <label class="block text-xs font-medium text-gray-400 mb-1.5">Notes</label>
+      <textarea name="notas" rows="4"
+                class="w-full bg-gray-700 border border-gray-600 text-white placeholder-gray-400 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none">{{ app.notas }}</textarea>
+    </div>
+    <button type="submit" class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:brightness-110 text-white font-bold py-2.5 rounded-xl text-sm transition">
+      Update
+    </button>
+  </form>
+
+  <!-- Meta -->
+  <div class="space-y-2 text-sm border-t border-gray-700 pt-5">
+    <div class="flex justify-between">
+      <span class="text-gray-500">Applied</span>
+      <span class="text-gray-300">{{ app.data_aplicacao|date:"M d, Y" }}</span>
+    </div>
+    {% if app.salario_estimado %}
+    <div class="flex justify-between">
+      <span class="text-gray-500">Salary</span>
+      <span class="text-gray-300">{{ app.salario_estimado }}</span>
+    </div>
+    {% endif %}
+    {% if app.link_vaga %}
+    <div class="flex justify-between">
+      <span class="text-gray-500">Job Link</span>
+      <a href="{{ app.link_vaga }}" target="_blank" class="text-indigo-400 hover:text-indigo-300 truncate max-w-[200px]">Open →</a>
+    </div>
+    {% endif %}
+    {% if app.cv_adaptation %}
+    <div class="flex justify-between">
+      <span class="text-gray-500">CV adaptation</span>
+      <a href="{% url 'cv_adapter:result' app.cv_adaptation.pk %}" class="text-indigo-400 hover:text-indigo-300">View →</a>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Actions -->
+  <div class="mt-auto pt-6 flex gap-3">
+    <a href="{% url 'job_tracker:edit' app.pk %}" class="flex-1 text-center border border-gray-600 bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2.5 rounded-xl text-sm transition">
+      Edit
+    </a>
+    <form method="post" action="{% url 'job_tracker:delete' app.pk %}" class="flex-1"
+          onsubmit="return confirm('Remove this application?')">
+      {% csrf_token %}
+      <button type="submit" class="w-full border border-red-700/50 bg-red-900/20 hover:bg-red-900/40 text-red-400 font-semibold py-2.5 rounded-xl text-sm transition">
+        Delete
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Slide in the panel
+  document.getElementById('detail-panel').classList.remove('translate-x-full');
+</script>

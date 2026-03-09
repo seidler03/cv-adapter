@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Adapt CV{% endblock %}
+{% block content %}
+<div class="p-6 md:p-8 max-w-7xl mx-auto">
+  <div class="mb-8">
+    <h1 class="text-2xl font-bold text-white">Adapt your CV</h1>
+    <p class="text-gray-400 text-sm mt-1">Paste the job description — AI will rewrite your CV and extract job title &amp; company.</p>
+  </div>
+
+  {% if not is_pro and monthly_usage >= monthly_limit %}
+  <div class="mb-6 rounded-2xl border border-amber-600/40 bg-amber-900/20 p-5 flex items-center justify-between gap-4">
+    <div>
+      <p class="font-semibold text-amber-300">Monthly limit reached</p>
+      <p class="text-sm text-gray-400 mt-1">You've used all {{ monthly_limit }} free adaptations. Upgrade to Pro for unlimited access.</p>
+    </div>
+    <a href="{% url 'payments:upgrade' %}" class="shrink-0 bg-gradient-to-r from-indigo-500 to-purple-600 hover:brightness-110 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition">Upgrade $9.90/mo</a>
+  </div>
+  {% endif %}
+
+  <div class="grid lg:grid-cols-2 gap-6">
+    <!-- Form -->
+    <div class="rounded-2xl border border-gray-700 bg-gray-800 p-6">
+      <form id="adapt-form"
+            x-data="{ loading: false }"
+            hx-post="{% url 'cv_adapter:process' %}"
+            hx-target="#result-area"
+            hx-swap="innerHTML"
+            @htmx:before-send="loading = true"
+            @htmx:after-request="loading = false">
+        {% csrf_token %}
+        <div class="space-y-5">
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1.5">Base CV *</label>
+            <select name="cv_base" class="w-full bg-gray-700 border border-gray-600 text-white rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+              <option value="">— select a CV —</option>
+              {% for cv in cv_bases %}
+              <option value="{{ cv.pk }}">{{ cv.original_filename }}{% if not cv.extracted_text %} ⚠ no text{% endif %}</option>
+              {% endfor %}
+            </select>
+            {% if not cv_bases %}
+            <p class="mt-1.5 text-xs text-amber-400">
+              No CVs yet. <a href="{% url 'cv_adapter:upload_cv' %}" class="underline hover:text-amber-300">Upload one first →</a>
+            </p>
+            {% endif %}
+            {% for cv in cv_bases %}{% if not cv.extracted_text %}
+            <p class="mt-1.5 text-xs text-amber-400">
+              ⚠ "{{ cv.original_filename }}" has no text &mdash;
+              <a href="{% url 'cv_adapter:upload_cv' %}" class="underline hover:text-amber-300">re-upload or paste the text →</a>
+            </p>
+            {% endif %}{% endfor %}
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1.5">Job Description *</label>
+            <textarea name="job_description" rows="14"
+                      class="w-full bg-gray-700 border border-gray-600 text-white placeholder-gray-400 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none font-mono text-sm transition"
+                      placeholder="Paste the full job description here…" required></textarea>
+          </div>
+
+          <button type="submit"
+                  :disabled="loading{% if not is_pro and monthly_usage >= monthly_limit %} || true{% endif %}"
+                  :class="loading ? 'opacity-60 cursor-not-allowed' : 'hover:brightness-110'"
+                  class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2">
+            <svg x-show="loading" class="animate-spin h-4 w-4 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="display:none">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            <span x-text="loading ? 'Processing…' : '\u2726 Adapt My CV'">✦ Adapt My CV</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Result area -->
+    <div id="result-area" class="min-h-[400px]">
+      <div class="rounded-2xl border border-dashed border-gray-700 h-full flex items-center justify-center text-gray-500 text-sm p-12">
+        <div class="text-center">
+          <div class="text-5xl mb-4">✨</div>
+          <p class="text-gray-400">Your adapted CV and cover letter will appear here</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  [x-cloak] { display: none !important; }
+</style>
+{% endblock %}

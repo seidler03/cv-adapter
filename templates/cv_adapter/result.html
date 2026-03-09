@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Result — {{ application.job_title|default:"Adaptation" }}{% endblock %}
+{% block content %}
+<div class="p-6 md:p-8 max-w-6xl mx-auto">
+  <div class="mb-6 flex items-start justify-between gap-4">
+    <div>
+      <a href="{% url 'cv_adapter:history' %}" class="text-xs text-gray-400 hover:text-gray-200">← History</a>
+      <h1 class="text-2xl font-bold text-white mt-2">
+        {{ application.job_title|default:"Adaptation" }}
+        {% if application.company_name %}<span class="text-gray-400 text-lg">@ {{ application.company_name }}</span>{% endif %}
+      </h1>
+      <p class="text-xs text-gray-500 mt-1">{{ application.created_at|date:"F d, Y · H:i" }}</p>
+    </div>
+    <a href="{% url 'cv_adapter:download_docx' application.pk %}" class="shrink-0 bg-gradient-to-r from-indigo-500 to-purple-600 hover:brightness-110 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition">↓ Download DOCX</a>
+  </div>
+
+  <!-- Score row -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div class="rounded-2xl border border-gray-700 bg-gray-800 p-5 text-center">
+      <p class="text-4xl font-extrabold
+        {% if application.score_match >= 70 %}text-green-400
+        {% elif application.score_match >= 40 %}text-amber-400
+        {% else %}text-red-400{% endif %}">{{ application.score_match }}%</p>
+      <p class="text-xs text-gray-400 mt-1 uppercase tracking-wide">Match score</p>
+    </div>
+    <div class="rounded-2xl border border-gray-700 bg-gray-800 p-5 text-center">
+      <p class="text-4xl font-extrabold text-green-400">{{ application.keywords_found|length }}</p>
+      <p class="text-xs text-gray-400 mt-1 uppercase tracking-wide">Keywords found</p>
+    </div>
+    <div class="rounded-2xl border border-gray-700 bg-gray-800 p-5 text-center">
+      <p class="text-4xl font-extrabold text-red-400">{{ application.keywords_missing|length }}</p>
+      <p class="text-xs text-gray-400 mt-1 uppercase tracking-wide">Keywords missing</p>
+    </div>
+    <div class="rounded-2xl border border-gray-700 bg-gray-800 p-5 text-center">
+      <p class="text-4xl font-extrabold text-indigo-400">{{ application.suggestions|length }}</p>
+      <p class="text-xs text-gray-400 mt-1 uppercase tracking-wide">Suggestions</p>
+    </div>
+  </div>
+
+  <div class="grid lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 space-y-5">
+      <!-- Adapted CV -->
+      <div class="rounded-2xl border border-gray-700 bg-gray-800 p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-semibold text-white">Adapted CV</h2>
+          <button onclick="navigator.clipboard.writeText(document.getElementById('cv-text').innerText)"
+                  class="border border-gray-600 bg-gray-700 hover:bg-gray-600 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition">Copy</button>
+        </div>
+        <pre id="cv-text" class="whitespace-pre-wrap text-sm text-gray-300 leading-relaxed max-h-[500px] overflow-y-auto rounded-xl bg-gray-900 p-4">{{ application.cv_adapted }}</pre>
+      </div>
+
+      <!-- Cover Letter -->
+      <div class="rounded-2xl border border-gray-700 bg-gray-800 p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-semibold text-white">Cover Letter</h2>
+          <button onclick="navigator.clipboard.writeText(document.getElementById('cl-text').innerText)"
+                  class="border border-gray-600 bg-gray-700 hover:bg-gray-600 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition">Copy</button>
+        </div>
+        <pre id="cl-text" class="whitespace-pre-wrap text-sm text-gray-300 leading-relaxed max-h-[400px] overflow-y-auto rounded-xl bg-gray-900 p-4">{{ application.cover_letter }}</pre>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="space-y-5">
+      <div class="rounded-2xl border border-gray-700 bg-gray-800 p-5">
+        <h3 class="font-semibold text-green-300 mb-3 text-sm">✓ Keywords Found</h3>
+        <div class="flex flex-wrap gap-2">
+          {% for kw in application.keywords_found %}
+          <span class="bg-green-900 text-green-300 rounded-full px-2.5 py-0.5 text-xs">{{ kw }}</span>
+          {% empty %}
+          <span class="text-xs text-gray-500">None detected</span>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="rounded-2xl border border-gray-700 bg-gray-800 p-5">
+        <h3 class="font-semibold text-red-300 mb-3 text-sm">✗ Keywords Missing</h3>
+        <div class="flex flex-wrap gap-2">
+          {% for kw in application.keywords_missing %}
+          <span class="bg-red-900 text-red-300 rounded-full px-2.5 py-0.5 text-xs">{{ kw }}</span>
+          {% empty %}
+          <span class="text-xs text-gray-500">None — great coverage!</span>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="rounded-2xl border border-gray-700 bg-gray-800 p-5">
+        <h3 class="font-semibold text-gray-300 mb-3 text-sm">Suggestions</h3>
+        <ul class="space-y-2">
+          {% for s in application.suggestions %}
+          <li class="flex gap-2 text-sm text-gray-300">
+            <span class="text-indigo-400 mt-0.5 shrink-0">→</span>{{ s }}
+          </li>
+          {% empty %}
+          <li class="text-xs text-gray-500">No suggestions.</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      {% if application.linkedin_message %}
+      <div class="rounded-2xl border border-blue-700/40 bg-blue-900/20 p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-semibold text-blue-300 mb-0 text-sm">🔗 LinkedIn Message</h3>
+          <button onclick="navigator.clipboard.writeText(document.getElementById('li-msg').innerText)"
+                  class="border border-blue-700/50 bg-blue-900/30 hover:bg-blue-800/40 text-blue-300 text-xs font-semibold px-3 py-1 rounded-xl transition">Copy</button>
+        </div>
+        <p id="li-msg" class="text-sm text-gray-200 leading-relaxed whitespace-pre-wrap">{{ application.linkedin_message }}</p>
+        <p class="mt-2 text-xs text-blue-400/70">{{ application.linkedin_message|length }}/300 characters</p>
+      </div>
+      {% endif %}
+
+      <div class="rounded-2xl border border-gray-700 bg-gray-800 p-5">
+        <h3 class="font-semibold text-gray-300 mb-3 text-sm">Job Description</h3>
+        <p class="text-xs text-gray-400 leading-relaxed line-clamp-6">{{ application.job_description }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

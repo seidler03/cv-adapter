@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Pricing{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-4xl px-4 py-20">
+  <h1 class="text-4xl font-bold text-center text-white mb-3">Simple, transparent pricing</h1>
+  <p class="text-center text-gray-400 mb-16">Start free. Upgrade when you need more.</p>
+
+  <div class="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+    <!-- Free -->
+    <div class="rounded-2xl border border-gray-700 bg-gray-800 p-8">
+      <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-5">Free</p>
+      <div class="flex items-end gap-1 mb-1"><span class="text-5xl font-extrabold text-white">$0</span></div>
+      <p class="text-gray-500 text-sm mb-8">forever</p>
+      <ul class="space-y-3 text-sm text-gray-300 mb-10">
+        <li class="flex gap-2"><span class="text-green-400">✓</span> {{ free_limit }} CV adaptations / month</li>
+        <li class="flex gap-2"><span class="text-green-400">✓</span> Cover letter generation</li>
+        <li class="flex gap-2"><span class="text-green-400">✓</span> Keyword analysis &amp; score</li>
+        <li class="flex gap-2"><span class="text-gray-600">✗</span> <span class="text-gray-500">Unlimited adaptations</span></li>
+        <li class="flex gap-2"><span class="text-gray-600">✗</span> <span class="text-gray-500">Job tracker</span></li>
+      </ul>
+      <a href="{% url 'account_signup' %}" class="block w-full text-center border border-gray-600 bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 rounded-xl transition">Get started free</a>
+    </div>
+
+    <!-- Pro -->
+    <div class="rounded-2xl border border-indigo-500/50 bg-gray-800 p-8 ring-2 ring-indigo-500/20 relative">
+      <span class="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest">Most Popular</span>
+      <p class="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-5">Pro</p>
+      <div class="flex items-end gap-1 mb-1"><span class="text-5xl font-extrabold text-white">${{ pro_price }}</span></div>
+      <p class="text-gray-500 text-sm mb-8">per month, billed in USD</p>
+      <ul class="space-y-3 text-sm text-gray-300 mb-10">
+        <li class="flex gap-2"><span class="text-green-400">✓</span> <strong class="text-white">Unlimited</strong> CV adaptations</li>
+        <li class="flex gap-2"><span class="text-green-400">✓</span> Cover letter generation</li>
+        <li class="flex gap-2"><span class="text-green-400">✓</span> Keyword gap analysis &amp; scoring</li>
+        <li class="flex gap-2"><span class="text-green-400">✓</span> Download adapted CV as DOCX</li>
+        <li class="flex gap-2"><span class="text-green-400">✓</span> Job application tracker</li>
+      </ul>
+      <a href="{% url 'payments:checkout' %}" class="block w-full text-center bg-gradient-to-r from-indigo-500 to-purple-600 hover:brightness-110 text-white font-bold py-3 rounded-xl transition">Upgrade to Pro</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

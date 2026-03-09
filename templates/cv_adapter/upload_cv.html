@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Upload CV{% endblock %}
+{% block content %}
+<div class="p-6 md:p-8 max-w-2xl mx-auto">
+  <div class="mb-8">
+    <a href="{% url 'dashboard:index' %}" class="text-xs text-gray-400 hover:text-gray-200">&larr; Back to dashboard</a>
+    <h1 class="text-2xl font-bold text-white mt-3">Add base CV</h1>
+    <p class="text-gray-400 text-sm mt-1">Upload a file (PDF/DOCX) or paste the text directly.</p>
+  </div>
+
+  {% if extraction_error %}
+  <div class="mb-6 rounded-2xl border border-amber-600/40 bg-amber-900/20 p-4 flex gap-3">
+    <svg class="h-5 w-5 text-amber-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+    </svg>
+    <p class="text-sm text-amber-300">{{ extraction_error }}</p>
+  </div>
+  {% endif %}
+
+  <div class="rounded-2xl border border-gray-700 bg-gray-800 p-8"
+       x-data="cvUpload({{ show_paste|yesno:'true,false' }})">
+
+    <!-- Tabs -->
+    <div class="flex gap-1 mb-8 bg-gray-900 rounded-xl p-1">
+      <button type="button" @click="tab='file'"
+              :class="tab==='file' ? 'bg-gray-700 text-white shadow' : 'text-gray-400 hover:text-gray-200'"
+              class="flex-1 py-2 text-sm font-medium rounded-lg transition">
+        &#x2191;&nbsp; Upload file
+      </button>
+      <button type="button" @click="tab='paste'"
+              :class="tab==='paste' ? 'bg-gray-700 text-white shadow' : 'text-gray-400 hover:text-gray-200'"
+              class="flex-1 py-2 text-sm font-medium rounded-lg transition">
+        &#x1F4CB;&nbsp; Paste text
+      </button>
+    </div>
+
+    <!-- FILE TAB -->
+    <div x-show="tab==='file'" x-cloak>
+      <form method="post" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+        <input type="hidden" name="input_mode" value="file"/>
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-2">CV File</label>
+          <label class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-xl cursor-pointer bg-gray-700 hover:bg-gray-600 transition"
+                 :class="filename ? 'border-indigo-500/60 bg-indigo-900/10' : 'border-gray-600'">
+            <div class="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
+              <svg class="w-8 h-8 mb-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+              </svg>
+              <p class="text-sm text-gray-400" x-text="filename || 'Click to upload or drag and drop'"></p>
+              <p class="text-xs text-gray-500 mt-1" x-show="!filename">PDF, DOCX &mdash; up to 5 MB</p>
+            </div>
+            <input type="file" name="file" accept=".pdf,.docx,.doc" class="hidden"
+                   @change="filename = $event.target.files[0] ? $event.target.files[0].name : ''"/>
+          </label>
+          {% if form.file.errors %}
+            <p class="mt-2 text-xs text-red-400">{{ form.file.errors|join:", " }}</p>
+          {% endif %}
+        </div>
+        <button type="submit"
+                class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:brightness-110 text-white font-bold py-3 rounded-xl transition">
+          Upload &amp; Extract Text
+        </button>
+      </form>
+    </div>
+
+    <!-- PASTE TAB -->
+    <div x-show="tab==='paste'" x-cloak>
+      <form method="post" class="space-y-5">
+        {% csrf_token %}
+        <input type="hidden" name="input_mode" value="paste"/>
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1.5">CV name *</label>
+          <input type="text" name="cv_name"
+                 value="{{ paste_form.cv_name.value|default:'' }}"
+                 placeholder="e.g. My Software Engineer CV"
+                 class="w-full bg-gray-700 border border-gray-600 text-white placeholder-gray-500 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                 required/>
+          {% if paste_form.cv_name.errors %}
+            <p class="mt-1 text-xs text-red-400">{{ paste_form.cv_name.errors|join:", " }}</p>
+          {% endif %}
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1.5">CV text *</label>
+          <textarea name="pasted_text" rows="18" required
+                    class="w-full bg-gray-700 border border-gray-600 text-white placeholder-gray-500 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-y font-mono text-sm transition"
+                    placeholder="Paste your complete CV text here…">{{ paste_form.pasted_text.value|default:'' }}</textarea>
+          {% if paste_form.pasted_text.errors %}
+            <p class="mt-1 text-xs text-red-400">{{ paste_form.pasted_text.errors|join:", " }}</p>
+          {% endif %}
+          <p class="mt-1.5 text-xs text-gray-500">Tip: open your CV, select all (Ctrl+A), copy, then paste here.</p>
+        </div>
+        <button type="submit"
+                class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:brightness-110 text-white font-bold py-3 rounded-xl transition">
+          Save CV Text
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>[x-cloak]{display:none!important}</style>
+<script>
+function cvUpload(startPaste) {
+  return { tab: startPaste ? 'paste' : 'file', filename: '' };
+}
+</script>
+{% endblock %}
