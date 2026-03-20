@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load socialaccount %}
 {% block title %}Create Account{% endblock %}
 {% block content %}
 <div class="min-h-screen flex items-center justify-center px-4 py-20">
@@ -8,7 +9,7 @@
 
   <div class="rounded-2xl border border-gray-700 bg-gray-800 p-8 space-y-5">
     <!-- Google OAuth -->
-    <a href="{% url 'socialaccount_signup' %}"
+    <a href="{% provider_login_url 'google' process='login' %}"
        class="flex items-center justify-center gap-3 w-full rounded-xl border border-gray-600 bg-gray-700 hover:bg-gray-600 px-4 py-2.5 text-sm font-medium text-white transition">
       <svg class="h-5 w-5" viewBox="0 0 24 24">
         <path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
