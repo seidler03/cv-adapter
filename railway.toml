@@ -3,8 +3,6 @@ builder = "NIXPACKS"
 
 [deploy]
 startCommand = "python manage.py collectstatic --noinput --settings=cvadapt.settings.prod && python manage.py migrate --settings=cvadapt.settings.prod && gunicorn cvadapt.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --log-file -"
-healthcheckPath = "/"
-healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
 
 [environments.production]
