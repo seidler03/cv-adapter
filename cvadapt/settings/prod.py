@@ -7,6 +7,10 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='.up.railway.app', cast=Csv())
 CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='https://*.up.railway.app', cast=Csv())
 
+# Evita tentativa de envio de confirmação por e-mail durante signup
+# quando SMTP não está configurado no Railway.
+ACCOUNT_EMAIL_VERIFICATION = config('ACCOUNT_EMAIL_VERIFICATION', default='none')
+
 DATABASE_URL = config('DATABASE_URL')
 DATABASES = {
     'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
@@ -20,10 +24,12 @@ SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
-# Email via SMTP
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# Email (configurável por ambiente)
+# Em produção sem SMTP configurado, use temporariamente:
+# EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
 EMAIL_HOST = config('EMAIL_HOST', default='smtp.sendgrid.net')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-EMAIL_USE_TLS = True
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
